@@ -1,6 +1,9 @@
 package models
 
-import "strings"
+import (
+	"strings"
+	"testing"
+)
 
 func (ms *ModelSuite) Test_Task_Create_Valid() {
 	task := &Task{Title: "Comprar café"}
@@ -37,6 +40,23 @@ func (ms *ModelSuite) Test_Task_Title_OnlySpaces_Invalid() {
 	ms.NoError(err)
 	ms.True(verrs.HasAny())
 	ms.Contains(verrs.Get("title"), "El título es obligatorio.")
+}
+
+func Test_Task_Validate_EmptyTitle(t *testing.T) {
+	for _, title := range []string{"", "   	  "} {
+		task := &Task{Title: title}
+
+		verrs, err := task.Validate(nil)
+		if err != nil {
+			t.Fatalf("Validate(%q) devolvió error: %v", title, err)
+		}
+		if !verrs.HasAny() {
+			t.Fatalf("Validate(%q) debería fallar con título vacío", title)
+		}
+		if got := verrs.Get("title"); len(got) != 1 || got[0] != "El título es obligatorio." {
+			t.Fatalf("Validate(%q) errores de title = %v", title, got)
+		}
+	}
 }
 
 func (ms *ModelSuite) Test_Task_Title_MaxLength() {
