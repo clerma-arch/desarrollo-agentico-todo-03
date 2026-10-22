@@ -38,6 +38,7 @@ func (as *ActionSuite) Test_TasksCreate_Valid() {
 	as.NoError(as.DB.First(task))
 	as.Equal("Nueva tarea de prueba", task.Title)
 	as.False(task.Completed)
+	as.Nil(task.DueDate)
 }
 
 func (as *ActionSuite) Test_TasksCreate_EmptyTitle_Invalid() {
@@ -77,6 +78,22 @@ func (as *ActionSuite) Test_TasksToggle_CompletesAndReopens() {
 
 	as.NoError(as.DB.Reload(task))
 	as.False(task.Completed)
+}
+
+func (as *ActionSuite) Test_TasksToggle_KeepsDueDate() {
+	due := time.Date(2026, time.October, 31, 0, 0, 0, 0, time.UTC)
+	task := &models.Task{Title: "Con fecha al completar", DueDate: &due}
+	verrs, err := as.DB.ValidateAndCreate(task)
+	as.NoError(err)
+	as.False(verrs.HasAny())
+
+	res := as.HTML("/tasks/%s/toggle", task.ID).Put(url.Values{})
+	as.Equal(303, res.Code)
+
+	as.NoError(as.DB.Reload(task))
+	as.True(task.Completed)
+	as.NotNil(task.DueDate)
+	as.Equal("2026-10-31", task.DueDate.Format("2006-01-02"))
 }
 
 func (as *ActionSuite) Test_TasksToggle_NotFound() {
