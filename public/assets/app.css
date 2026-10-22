@@ -1,3 +1,4 @@
+/* Base: modelo de caja y reinicio de márgenes de los elementos de bloque usados. */
 *,
 *::before,
 *::after {
@@ -24,6 +25,17 @@ form {
   --color-focus: #245ab4;
   --color-danger: #a52b25;
   --font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+
+  /* Blanco de las superficies (página y campos) y del texto sobre fondos de color. */
+  --color-surface: #ffffff;
+  /* Tono suave del color primario: enlace de navegación y hover del icono de completar. */
+  --color-primary-soft: #f7e9e4;
+  /* Radio de esquina común de controles, avisos y enlaces con fondo. */
+  --radius: 6px;
+  /* Tamaño mínimo de un objetivo táctil: alto de controles y ancho de las columnas de iconos. */
+  --tap-size: 44px;
+  /* Duración y curva de las transiciones de color y opacidad. */
+  --transition-fast: 120ms ease;
 }
 
 body {
@@ -32,10 +44,46 @@ body {
   font-size: 0.95rem;
   line-height: 1.5;
   color: var(--color-text);
-  background: #ffffff;
+  background: var(--color-surface);
   -webkit-font-smoothing: antialiased;
 }
 
+/* Patrón compartido: enlaces y botones con altura táctil, contenido centrado y sin subrayado. */
+.app-brand,
+.nav-link,
+.back-link,
+.button,
+.task-toggle-button,
+.icon-action {
+  align-items: center;
+  min-height: var(--tap-size);
+  text-decoration: none;
+}
+
+/* Patrón compartido: elementos en línea que alinean su contenido con flex. */
+.back-link,
+.button,
+.task-toggle-button,
+.icon-action {
+  display: inline-flex;
+}
+
+/* Patrón compartido: controles de una sola pieza (icono o texto) centrados que no se encogen. */
+.button,
+.task-toggle-button,
+.icon-action {
+  justify-content: center;
+  flex-shrink: 0;
+}
+
+/* Patrón compartido: cajas de aviso (error de campo y mensajes flash) con la misma esquina y tamaño de texto. */
+.field-error,
+.flash {
+  border-radius: var(--radius);
+  font-size: 0.85rem;
+}
+
+/* Layout general: barra lateral y contenido principal. */
 .app-layout {
   display: grid;
   grid-template-columns: 14rem minmax(0, 1fr);
@@ -50,13 +98,10 @@ body {
 
 .app-brand {
   display: flex;
-  align-items: center;
   gap: 0.7rem;
-  min-height: 44px;
   padding: 0 0.65rem;
   margin-bottom: 1.5rem;
   color: var(--color-text);
-  text-decoration: none;
   font-size: 1.4rem;
   font-weight: 750;
   line-height: 1;
@@ -69,16 +114,13 @@ body {
 
 .nav-link {
   display: flex;
-  align-items: center;
   gap: 0.65rem;
-  min-height: 44px;
   padding: 0.55rem 0.7rem;
-  border-radius: 6px;
-  background: #f7e9e4;
+  border-radius: var(--radius);
+  background: var(--color-primary-soft);
   color: #a03123;
   font-size: 0.9rem;
   font-weight: 600;
-  text-decoration: none;
 }
 
 .nav-link:hover {
@@ -115,13 +157,14 @@ h1 {
   font-size: 0.8rem;
 }
 
+/* Lista de tareas: cada fila es una rejilla botón de completar / título / acciones. */
 .task-list {
   list-style: none;
 }
 
 .task {
   display: grid;
-  grid-template-columns: 44px minmax(0, 1fr) auto;
+  grid-template-columns: var(--tap-size) minmax(0, 1fr) auto;
   align-items: start;
   column-gap: 0.3rem;
   min-height: 61px;
@@ -143,23 +186,18 @@ h1 {
   color: var(--color-muted);
 }
 
+/* Base común del botón de completar y de los botones de icono; el patrón de centrado va arriba. */
 .task-toggle-button,
 .icon-action {
   position: relative;
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-  flex-shrink: 0;
-  width: 44px;
-  min-height: 44px;
+  width: var(--tap-size);
   padding: 0;
   font: inherit;
   color: var(--color-muted);
   background: transparent;
   border: 0;
-  border-radius: 6px;
+  border-radius: var(--radius);
   cursor: pointer;
-  text-decoration: none;
 }
 
 .completion-icon {
@@ -169,8 +207,8 @@ h1 {
   height: 20px;
   border: 1.5px solid #858580;
   border-radius: 50%;
-  color: #ffffff;
-  transition: background-color 120ms ease, border-color 120ms ease;
+  color: var(--color-surface);
+  transition: background-color var(--transition-fast), border-color var(--transition-fast);
 }
 
 .completion-icon svg {
@@ -180,7 +218,7 @@ h1 {
 }
 
 .task-toggle-button:hover .completion-icon {
-  background: #f7e9e4;
+  background: var(--color-primary-soft);
   border-color: var(--color-primary);
   color: var(--color-primary);
 }
@@ -229,6 +267,7 @@ h1 {
   background: #fcf0ec;
 }
 
+/* Formulario de nueva tarea. */
 .new-task {
   margin-top: 0.75rem;
 }
@@ -243,8 +282,8 @@ h1 {
   display: grid;
   place-items: center;
   flex-shrink: 0;
-  width: 44px;
-  height: 44px;
+  width: var(--tap-size);
+  height: var(--tap-size);
   color: var(--color-primary);
   font-size: 1.8rem;
   font-weight: 300;
@@ -254,13 +293,13 @@ h1 {
 input[type="text"] {
   width: 100%;
   min-width: 0;
-  min-height: 44px;
+  min-height: var(--tap-size);
   padding: 0.6rem 0.75rem;
   font: inherit;
   color: var(--color-text);
-  background: #ffffff;
+  background: var(--color-surface);
   border: 1px solid #92928a;
-  border-radius: 6px;
+  border-radius: var(--radius);
 }
 
 .new-task-row input {
@@ -281,22 +320,17 @@ input[aria-invalid="true"] {
   background: #fff9f7;
 }
 
+/* Botones: el patrón de centrado y altura táctil va arriba; aquí el aspecto propio. */
 .button {
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-  flex-shrink: 0;
-  min-height: 44px;
   padding: 0.6rem 0.9rem;
   border: 1px solid #dadad4;
-  border-radius: 6px;
+  border-radius: var(--radius);
   color: #41413d;
   background: #f6f6f2;
   font-family: inherit;
   font-size: 0.85rem;
   font-weight: 600;
   line-height: 1.5;
-  text-decoration: none;
   white-space: nowrap;
   cursor: pointer;
 }
@@ -308,7 +342,7 @@ input[aria-invalid="true"] {
 .button-primary {
   background: var(--color-primary);
   border-color: var(--color-primary);
-  color: #ffffff;
+  color: var(--color-surface);
 }
 
 .button-primary:hover {
@@ -323,6 +357,7 @@ input:focus-visible {
   outline-offset: 3px;
 }
 
+/* Ayudas, errores y mensajes; la forma común de los avisos va arriba. */
 .field-hint {
   margin-top: 0.65rem;
   color: var(--color-muted);
@@ -332,10 +367,8 @@ input:focus-visible {
 .field-error {
   margin-top: 0.75rem;
   padding: 0.7rem 0.85rem;
-  border-radius: 6px;
   color: #912a20;
   background: #fff0eb;
-  font-size: 0.85rem;
 }
 
 .empty-state {
@@ -348,8 +381,6 @@ input:focus-visible {
   margin-bottom: 1.25rem;
   padding: 0.75rem 0.9rem;
   border: 1px solid var(--color-border);
-  border-radius: 6px;
-  font-size: 0.85rem;
 }
 
 .flash-success {
@@ -358,15 +389,12 @@ input:focus-visible {
   border-color: #d5e4ce;
 }
 
+/* Pantalla de edición. */
 .back-link {
-  display: inline-flex;
-  align-items: center;
   gap: 0.45rem;
-  min-height: 44px;
   margin-bottom: 1.1rem;
   font-size: 0.85rem;
   color: var(--color-muted);
-  text-decoration: none;
 }
 
 .back-link:hover {
@@ -390,6 +418,7 @@ input:focus-visible {
   border-top: 1px solid var(--color-border);
 }
 
+/* Utilidad: oculto a la vista pero disponible para lectores de pantalla (también el estado de tarea). */
 .sr-only,
 .task-status {
   position: absolute;
@@ -403,10 +432,11 @@ input:focus-visible {
   border: 0;
 }
 
+/* Con ratón, las acciones de cada tarea solo aparecen al pasar o enfocar la fila. */
 @media (hover: hover) and (pointer: fine) {
   .task-actions {
     opacity: 0;
-    transition: opacity 120ms ease;
+    transition: opacity var(--transition-fast);
   }
 
   .task:hover .task-actions,
@@ -415,6 +445,7 @@ input:focus-visible {
   }
 }
 
+/* Móvil: los puntos de ruptura no admiten variables, por eso 760px y 380px van literales. */
 @media (max-width: 760px) {
   .app-layout {
     grid-template-columns: minmax(0, 1fr);
@@ -476,7 +507,7 @@ input:focus-visible {
   }
 
   .new-task-row input {
-    flex-basis: calc(100% - 44px);
+    flex-basis: calc(100% - var(--tap-size));
   }
 
   .new-task-row .button {
