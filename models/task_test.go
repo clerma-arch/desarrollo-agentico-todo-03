@@ -1,6 +1,9 @@
 package models
 
-import "strings"
+import (
+	"strings"
+	"time"
+)
 
 func (ms *ModelSuite) Test_Task_Create_Valid() {
 	task := &Task{Title: "Comprar café"}
@@ -68,4 +71,31 @@ func (ms *ModelSuite) Test_Task_Toggle_Persists() {
 	reloaded := &Task{}
 	ms.NoError(ms.DB.Find(reloaded, task.ID))
 	ms.True(reloaded.Completed)
+}
+
+func (ms *ModelSuite) Test_Task_DueDate_Optional() {
+	task := &Task{Title: "Sin fecha"}
+	verrs, err := ms.DB.ValidateAndCreate(task)
+	ms.NoError(err)
+	ms.False(verrs.HasAny())
+
+	reloaded := &Task{}
+	ms.NoError(ms.DB.Find(reloaded, task.ID))
+	ms.Nil(reloaded.DueDate)
+}
+
+func (ms *ModelSuite) Test_Task_DueDate_DayOnly_Persists() {
+	due := time.Date(2026, time.October, 22, 0, 0, 0, 0, time.UTC)
+	task := &Task{Title: "Con fecha", DueDate: &due}
+	verrs, err := ms.DB.ValidateAndCreate(task)
+	ms.NoError(err)
+	ms.False(verrs.HasAny())
+
+	reloaded := &Task{}
+	ms.NoError(ms.DB.Find(reloaded, task.ID))
+	ms.NotNil(reloaded.DueDate)
+	ms.Equal(2026, reloaded.DueDate.Year())
+	ms.Equal(time.October, reloaded.DueDate.Month())
+	ms.Equal(22, reloaded.DueDate.Day())
+	ms.Equal(0, reloaded.DueDate.Hour())
 }

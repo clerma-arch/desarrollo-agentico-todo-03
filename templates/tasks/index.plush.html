@@ -29,7 +29,12 @@
               <span class="toggle-label sr-only"><%= if (t.Completed) { %>Reabrir<% } else { %>Completar<% } %></span>
             </button>
           </form>
-          <span class="task-title"><%= t.Title %></span>
+          <span class="task-title">
+            <%= t.Title %>
+            <%= if (t.DueDate != nil) { %>
+              <span class="task-due">Fecha límite: <%= t.DueDate.Format("02/01/2006") %></span>
+            <% } %>
+          </span>
           <%= if (t.Completed) { %>
             <span class="task-status">Completada</span>
           <% } %>
@@ -70,11 +75,15 @@
       autocomplete="off"
       <%= if (errors.HasAny()) { %>autofocus aria-invalid="true" aria-describedby="title-error"<% } %>
     >
+    <input type="date" name="due_date" aria-label="Fecha límite (opcional)" title="Fecha límite (opcional)">
     <button type="submit" class="button button-primary">Añadir</button>
   </div>
   <%= if (errors.HasAny()) { %>
     <p id="title-error" class="field-error" role="alert">
       <%= for (msg) in errors.Get("title") { %><%= msg %><% } %>
     </p>
+    <%= for (msg) in errors.Get("due_date") { %>
+      <p id="due-date-error" class="field-error" role="alert"><%= msg %></p>
+    <% } %>
   <% } %>
 </form>

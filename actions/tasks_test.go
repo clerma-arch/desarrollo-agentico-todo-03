@@ -3,6 +3,7 @@ package actions
 import (
 	"net/url"
 	"strings"
+	"time"
 
 	"todo/models"
 
@@ -236,4 +237,76 @@ func (as *ActionSuite) Test_TasksUpdate_NotFound() {
 func (as *ActionSuite) Test_TasksUpdate_InvalidID() {
 	res := as.HTML("/tasks/no-es-un-uuid").Put(url.Values{"title": {"Título nuevo"}})
 	as.Equal(404, res.Code)
+}
+
+func (as *ActionSuite) Test_TasksCreate_WithDueDate() {
+	res := as.HTML("/tasks").Post(url.Values{"title": {"Entregar el informe"}, "due_date": {"2026-10-22"}})
+	as.Equal(303, res.Code)
+
+	task := &models.Task{}
+	as.NoError(as.DB.First(task))
+	as.NotNil(task.DueDate)
+	as.Equal("2026-10-22", task.DueDate.Format("2006-01-02"))
+}
+
+func (as *ActionSuite) Test_TasksCreate_InvalidDueDate() {
+	res := as.HTML("/tasks").Post(url.Values{"title": {"Tarea con fecha rota"}, "due_date": {"no-es-fecha"}})
+	as.Equal(422, res.Code)
+	as.Contains(res.Body.String(), "La fecha no es válida.")
+
+	count, err := as.DB.Count(&models.Task{})
+	as.NoError(err)
+	as.Equal(0, count)
+}
+
+func (as *ActionSuite) Test_TasksIndex_ShowsDueDate() {
+	due := time.Date(2026, time.October, 22, 0, 0, 0, 0, time.UTC)
+	task := &models.Task{Title: "Tarea con fecha", DueDate: &due}
+	verrs, err := as.DB.ValidateAndCreate(task)
+	as.NoError(err)
+	as.False(verrs.HasAny())
+
+	res := as.HTML("/").Get()
+	as.Equal(200, res.Code)
+	as.Contains(res.Body.String(), "22/10/2026")
+}
+
+func (as *ActionSuite) Test_TasksUpdate_SetsAndClearsDueDate() {
+	task := as.taskForEditing(true)
+
+	res := as.HTML("/tasks/%s", task.ID).Put(url.Values{"title": {"Título original"}, "due_date": {"2026-10-22"}})
+	as.Equal(303, res.Code)
+	as.NoError(as.DB.Reload(task))
+	as.NotNil(task.DueDate)
+	as.Equal("2026-10-22", task.DueDate.Format("2006-01-02"))
+
+	res = as.HTML("/tasks/%s", task.ID).Put(url.Values{"title": {"Título original"}, "due_date": {""}})
+	as.Equal(303, res.Code)
+	as.NoError(as.DB.Reload(task))
+	as.Nil(task.DueDate)
+	as.Equal("Título original", task.Title)
+	as.True(task.Completed)
+}
+
+func (as *ActionSuite) Test_TasksUpdate_InvalidDueDate() {
+	task := as.taskForEditing(false)
+	res := as.HTML("/tasks/%s", task.ID).Put(url.Values{"title": {"Título nuevo"}, "due_date": {"no-es-fecha"}})
+	as.Equal(422, res.Code)
+	as.Contains(res.Body.String(), "La fecha no es válida.")
+	as.Contains(res.Body.String(), `aria-describedby="due-date-error"`)
+	as.NoError(as.DB.Reload(task))
+	as.Equal("Título original", task.Title)
+	as.Nil(task.DueDate)
+}
+
+func (as *ActionSuite) Test_TasksEdit_PrefillsDueDate() {
+	due := time.Date(2026, time.October, 22, 0, 0, 0, 0, time.UTC)
+	task := &models.Task{Title: "Con fecha para editar", DueDate: &due}
+	verrs, err := as.DB.ValidateAndCreate(task)
+	as.NoError(err)
+	as.False(verrs.HasAny())
+
+	res := as.HTML("/tasks/%s/edit", task.ID).Get()
+	as.Equal(200, res.Code)
+	as.Contains(res.Body.String(), `value="2026-10-22"`)
 }
