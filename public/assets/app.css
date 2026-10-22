@@ -180,6 +180,12 @@ h1 {
   line-height: 1.55;
 }
 
+.task-due {
+  display: block;
+  font-size: 0.85rem;
+  color: var(--color-muted);
+}
+
 /* Base común del botón de completar y de los botones de icono; el patrón de centrado va arriba. */
 .task-toggle-button,
 .icon-action {
@@ -298,6 +304,11 @@ input[type="text"] {
 
 .new-task-row input {
   flex: 1;
+}
+
+.new-task-row input[type="date"] {
+  flex: 0 0 auto;
+  width: auto;
 }
 
 input::placeholder {
