@@ -266,6 +266,18 @@ func (as *ActionSuite) Test_TasksCreate_InvalidTitleKeepsDueDate() {
 	as.Contains(res.Body.String(), `value="2026-10-22"`)
 }
 
+func (as *ActionSuite) Test_TasksUpdate_InvalidTitleKeepsDueDate() {
+	task := as.taskForEditing(false)
+
+	res := as.HTML("/tasks/%s", task.ID).Put(url.Values{"title": {""}, "due_date": {"2026-10-22"}})
+	as.Equal(422, res.Code)
+	as.Contains(res.Body.String(), `name="due_date"`)
+	as.Contains(res.Body.String(), `value="2026-10-22"`)
+	as.NoError(as.DB.Reload(task))
+	as.Equal("Título original", task.Title)
+	as.Nil(task.DueDate)
+}
+
 func (as *ActionSuite) Test_TasksIndex_ShowsDueDate() {
 	due := time.Date(2026, time.October, 22, 0, 0, 0, 0, time.UTC)
 	task := &models.Task{Title: "Tarea con fecha", DueDate: &due}
