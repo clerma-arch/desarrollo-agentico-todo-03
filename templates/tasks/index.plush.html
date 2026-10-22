@@ -75,7 +75,7 @@
       autocomplete="off"
       <%= if (errors.HasAny()) { %>autofocus aria-invalid="true" aria-describedby="title-error"<% } %>
     >
-    <input type="date" name="due_date" aria-label="Fecha límite (opcional)" title="Fecha límite (opcional)">
+    <input type="date" name="due_date" value="<%= if (task.DueDate != nil) { %><%= task.DueDate.Format("2006-01-02") %><% } %>" aria-label="Fecha límite (opcional)" title="Fecha límite (opcional)">
     <button type="submit" class="button button-primary">Añadir</button>
   </div>
   <%= if (errors.HasAny()) { %>
