@@ -30,7 +30,7 @@ func (as *ActionSuite) Test_TasksIndex_ListsTasks() {
 }
 
 func (as *ActionSuite) Test_TasksCreate_Valid() {
-	res := as.HTML("/tasks").Post(&models.Task{Title: "  Nueva tarea de prueba  "})
+	res := as.authed("/tasks").Post(&models.Task{Title: "  Nueva tarea de prueba  "})
 	as.Equal(303, res.Code)
 	as.Equal("/", res.Header().Get("Location"))
 
@@ -42,7 +42,7 @@ func (as *ActionSuite) Test_TasksCreate_Valid() {
 }
 
 func (as *ActionSuite) Test_TasksCreate_EmptyTitle_Invalid() {
-	res := as.HTML("/tasks").Post(&models.Task{Title: ""})
+	res := as.authed("/tasks").Post(&models.Task{Title: ""})
 	as.Equal(422, res.Code)
 	as.Contains(res.Body.String(), "El título es obligatorio.")
 
@@ -52,7 +52,7 @@ func (as *ActionSuite) Test_TasksCreate_EmptyTitle_Invalid() {
 }
 
 func (as *ActionSuite) Test_TasksCreate_OnlySpaces_Invalid() {
-	res := as.HTML("/tasks").Post(&models.Task{Title: "     "})
+	res := as.authed("/tasks").Post(&models.Task{Title: "     "})
 	as.Equal(422, res.Code)
 	as.Contains(res.Body.String(), "El título es obligatorio.")
 
@@ -67,13 +67,13 @@ func (as *ActionSuite) Test_TasksToggle_CompletesAndReopens() {
 	as.NoError(err)
 	as.False(verrs.HasAny())
 
-	res := as.HTML("/tasks/%s/toggle", task.ID).Put(url.Values{})
+	res := as.authed("/tasks/%s/toggle", task.ID).Put(url.Values{})
 	as.Equal(303, res.Code)
 
 	as.NoError(as.DB.Reload(task))
 	as.True(task.Completed)
 
-	res = as.HTML("/tasks/%s/toggle", task.ID).Put(url.Values{})
+	res = as.authed("/tasks/%s/toggle", task.ID).Put(url.Values{})
 	as.Equal(303, res.Code)
 
 	as.NoError(as.DB.Reload(task))
@@ -87,7 +87,7 @@ func (as *ActionSuite) Test_TasksToggle_KeepsDueDate() {
 	as.NoError(err)
 	as.False(verrs.HasAny())
 
-	res := as.HTML("/tasks/%s/toggle", task.ID).Put(url.Values{})
+	res := as.authed("/tasks/%s/toggle", task.ID).Put(url.Values{})
 	as.Equal(303, res.Code)
 
 	as.NoError(as.DB.Reload(task))
@@ -98,12 +98,12 @@ func (as *ActionSuite) Test_TasksToggle_KeepsDueDate() {
 
 func (as *ActionSuite) Test_TasksToggle_NotFound() {
 	id := uuid.Must(uuid.NewV4())
-	res := as.HTML("/tasks/%s/toggle", id).Put(url.Values{})
+	res := as.authed("/tasks/%s/toggle", id).Put(url.Values{})
 	as.Equal(404, res.Code)
 }
 
 func (as *ActionSuite) Test_TasksToggle_InvalidID() {
-	res := as.HTML("/tasks/no-es-un-uuid/toggle").Put(url.Values{})
+	res := as.authed("/tasks/no-es-un-uuid/toggle").Put(url.Values{})
 	as.Equal(404, res.Code)
 }
 
@@ -113,7 +113,7 @@ func (as *ActionSuite) Test_TasksDestroy() {
 	as.NoError(err)
 	as.False(verrs.HasAny())
 
-	res := as.HTML("/tasks/%s", task.ID).Delete()
+	res := as.authed("/tasks/%s", task.ID).Delete()
 	as.Equal(303, res.Code)
 
 	count, err := as.DB.Count(&models.Task{})
@@ -123,7 +123,7 @@ func (as *ActionSuite) Test_TasksDestroy() {
 
 func (as *ActionSuite) Test_TasksDestroy_NotFound() {
 	id := uuid.Must(uuid.NewV4())
-	res := as.HTML("/tasks/%s", id).Delete()
+	res := as.authed("/tasks/%s", id).Delete()
 	as.Equal(404, res.Code)
 }
 
@@ -180,7 +180,7 @@ func (as *ActionSuite) Test_TasksEdit_EscapesTitle() {
 func (as *ActionSuite) Test_TasksUpdate_PersistsTitleOnly() {
 	task := as.taskForEditing(true)
 	id, createdAt, updatedAt := task.ID, task.CreatedAt, task.UpdatedAt
-	res := as.HTML("/tasks/%s", id).Put(url.Values{
+	res := as.authed("/tasks/%s", id).Put(url.Values{
 		"title": {"  Título actualizado  "}, "completed": {"false"},
 		"id": {uuid.Must(uuid.NewV4()).String()}, "created_at": {"2000-01-01T00:00:00Z"},
 	})
@@ -199,7 +199,7 @@ func (as *ActionSuite) Test_TasksUpdate_PersistsTitleOnly() {
 
 func (as *ActionSuite) Test_TasksUpdate_PendingTaskRemainsPending() {
 	task := as.taskForEditing(false)
-	res := as.HTML("/tasks/%s", task.ID).Put(url.Values{"title": {"Nuevo título"}, "completed": {"true"}})
+	res := as.authed("/tasks/%s", task.ID).Put(url.Values{"title": {"Nuevo título"}, "completed": {"true"}})
 	as.Equal(303, res.Code)
 	as.NoError(as.DB.Reload(task))
 	as.Equal("Nuevo título", task.Title)
@@ -208,7 +208,7 @@ func (as *ActionSuite) Test_TasksUpdate_PendingTaskRemainsPending() {
 
 func (as *ActionSuite) Test_TasksUpdate_EmptyTitle() {
 	task := as.taskForEditing(false)
-	res := as.HTML("/tasks/%s", task.ID).Put(url.Values{"title": {""}})
+	res := as.authed("/tasks/%s", task.ID).Put(url.Values{"title": {""}})
 	as.Equal(422, res.Code)
 	as.Contains(res.Body.String(), "El título es obligatorio.")
 	as.Contains(res.Body.String(), `aria-describedby="title-error"`)
@@ -218,7 +218,7 @@ func (as *ActionSuite) Test_TasksUpdate_EmptyTitle() {
 
 func (as *ActionSuite) Test_TasksUpdate_OnlySpaces() {
 	task := as.taskForEditing(true)
-	res := as.HTML("/tasks/%s", task.ID).Put(url.Values{"title": {"   "}})
+	res := as.authed("/tasks/%s", task.ID).Put(url.Values{"title": {"   "}})
 	as.Equal(422, res.Code)
 	as.Contains(res.Body.String(), "El título es obligatorio.")
 	as.NoError(as.DB.Reload(task))
@@ -229,7 +229,7 @@ func (as *ActionSuite) Test_TasksUpdate_OnlySpaces() {
 func (as *ActionSuite) Test_TasksUpdate_TitleTooLong() {
 	task := as.taskForEditing(false)
 	title := strings.Repeat("á", models.TitleMaxLength+1)
-	res := as.HTML("/tasks/%s", task.ID).Put(url.Values{"title": {title}})
+	res := as.authed("/tasks/%s", task.ID).Put(url.Values{"title": {title}})
 	as.Equal(422, res.Code)
 	as.Contains(res.Body.String(), "El título no puede superar los 200 caracteres.")
 	as.Contains(res.Body.String(), title)
@@ -240,24 +240,24 @@ func (as *ActionSuite) Test_TasksUpdate_TitleTooLong() {
 func (as *ActionSuite) Test_TasksUpdate_TitleAtLimit() {
 	task := as.taskForEditing(false)
 	title := strings.Repeat("á", models.TitleMaxLength)
-	res := as.HTML("/tasks/%s", task.ID).Put(url.Values{"title": {title}})
+	res := as.authed("/tasks/%s", task.ID).Put(url.Values{"title": {title}})
 	as.Equal(303, res.Code)
 	as.NoError(as.DB.Reload(task))
 	as.Equal(title, task.Title)
 }
 
 func (as *ActionSuite) Test_TasksUpdate_NotFound() {
-	res := as.HTML("/tasks/%s", uuid.Must(uuid.NewV4())).Put(url.Values{"title": {"Título nuevo"}})
+	res := as.authed("/tasks/%s", uuid.Must(uuid.NewV4())).Put(url.Values{"title": {"Título nuevo"}})
 	as.Equal(404, res.Code)
 }
 
 func (as *ActionSuite) Test_TasksUpdate_InvalidID() {
-	res := as.HTML("/tasks/no-es-un-uuid").Put(url.Values{"title": {"Título nuevo"}})
+	res := as.authed("/tasks/no-es-un-uuid").Put(url.Values{"title": {"Título nuevo"}})
 	as.Equal(404, res.Code)
 }
 
 func (as *ActionSuite) Test_TasksCreate_WithDueDate() {
-	res := as.HTML("/tasks").Post(url.Values{"title": {"Entregar el informe"}, "due_date": {"2026-10-22"}})
+	res := as.authed("/tasks").Post(url.Values{"title": {"Entregar el informe"}, "due_date": {"2026-10-22"}})
 	as.Equal(303, res.Code)
 
 	task := &models.Task{}
@@ -267,7 +267,7 @@ func (as *ActionSuite) Test_TasksCreate_WithDueDate() {
 }
 
 func (as *ActionSuite) Test_TasksCreate_InvalidDueDate() {
-	res := as.HTML("/tasks").Post(url.Values{"title": {"Tarea con fecha rota"}, "due_date": {"no-es-fecha"}})
+	res := as.authed("/tasks").Post(url.Values{"title": {"Tarea con fecha rota"}, "due_date": {"no-es-fecha"}})
 	as.Equal(422, res.Code)
 	as.Contains(res.Body.String(), "La fecha no es válida.")
 	as.Contains(res.Body.String(), `value="no-es-fecha"`)
@@ -278,7 +278,7 @@ func (as *ActionSuite) Test_TasksCreate_InvalidDueDate() {
 }
 
 func (as *ActionSuite) Test_TasksCreate_InvalidTitleKeepsDueDate() {
-	res := as.HTML("/tasks").Post(url.Values{"title": {""}, "due_date": {"2026-10-22"}})
+	res := as.authed("/tasks").Post(url.Values{"title": {""}, "due_date": {"2026-10-22"}})
 	as.Equal(422, res.Code)
 	as.Contains(res.Body.String(), `name="due_date"`)
 	as.Contains(res.Body.String(), `value="2026-10-22"`)
@@ -287,7 +287,7 @@ func (as *ActionSuite) Test_TasksCreate_InvalidTitleKeepsDueDate() {
 func (as *ActionSuite) Test_TasksUpdate_InvalidTitleKeepsDueDate() {
 	task := as.taskForEditing(false)
 
-	res := as.HTML("/tasks/%s", task.ID).Put(url.Values{"title": {""}, "due_date": {"2026-10-22"}})
+	res := as.authed("/tasks/%s", task.ID).Put(url.Values{"title": {""}, "due_date": {"2026-10-22"}})
 	as.Equal(422, res.Code)
 	as.Contains(res.Body.String(), `name="due_date"`)
 	as.Contains(res.Body.String(), `value="2026-10-22"`)
@@ -311,13 +311,13 @@ func (as *ActionSuite) Test_TasksIndex_ShowsDueDate() {
 func (as *ActionSuite) Test_TasksUpdate_SetsAndClearsDueDate() {
 	task := as.taskForEditing(true)
 
-	res := as.HTML("/tasks/%s", task.ID).Put(url.Values{"title": {"Título original"}, "due_date": {"2026-10-22"}})
+	res := as.authed("/tasks/%s", task.ID).Put(url.Values{"title": {"Título original"}, "due_date": {"2026-10-22"}})
 	as.Equal(303, res.Code)
 	as.NoError(as.DB.Reload(task))
 	as.NotNil(task.DueDate)
 	as.Equal("2026-10-22", task.DueDate.Format("2006-01-02"))
 
-	res = as.HTML("/tasks/%s", task.ID).Put(url.Values{"title": {"Título original"}, "due_date": {""}})
+	res = as.authed("/tasks/%s", task.ID).Put(url.Values{"title": {"Título original"}, "due_date": {""}})
 	as.Equal(303, res.Code)
 	as.NoError(as.DB.Reload(task))
 	as.Nil(task.DueDate)
@@ -327,7 +327,7 @@ func (as *ActionSuite) Test_TasksUpdate_SetsAndClearsDueDate() {
 
 func (as *ActionSuite) Test_TasksUpdate_InvalidDueDate() {
 	task := as.taskForEditing(false)
-	res := as.HTML("/tasks/%s", task.ID).Put(url.Values{"title": {"Título nuevo"}, "due_date": {"no-es-fecha"}})
+	res := as.authed("/tasks/%s", task.ID).Put(url.Values{"title": {"Título nuevo"}, "due_date": {"no-es-fecha"}})
 	as.Equal(422, res.Code)
 	as.Contains(res.Body.String(), "La fecha no es válida.")
 	as.Contains(res.Body.String(), `aria-describedby="due-date-error"`)
