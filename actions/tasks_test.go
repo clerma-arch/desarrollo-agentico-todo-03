@@ -270,6 +270,7 @@ func (as *ActionSuite) Test_TasksCreate_InvalidDueDate() {
 	res := as.HTML("/tasks").Post(url.Values{"title": {"Tarea con fecha rota"}, "due_date": {"no-es-fecha"}})
 	as.Equal(422, res.Code)
 	as.Contains(res.Body.String(), "La fecha no es válida.")
+	as.Contains(res.Body.String(), `value="no-es-fecha"`)
 
 	count, err := as.DB.Count(&models.Task{})
 	as.NoError(err)
@@ -330,6 +331,7 @@ func (as *ActionSuite) Test_TasksUpdate_InvalidDueDate() {
 	as.Equal(422, res.Code)
 	as.Contains(res.Body.String(), "La fecha no es válida.")
 	as.Contains(res.Body.String(), `aria-describedby="due-date-error"`)
+	as.Contains(res.Body.String(), `value="no-es-fecha"`)
 	as.NoError(as.DB.Reload(task))
 	as.Equal("Título original", task.Title)
 	as.Nil(task.DueDate)

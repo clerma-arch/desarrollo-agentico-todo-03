@@ -39,6 +39,7 @@ func TasksIndex(c buffalo.Context) error {
 
 	c.Set("tasks", tasks)
 	c.Set("task", &models.Task{})
+	c.Set("dueDateInput", "")
 	c.Set("errors", validate.NewErrors())
 	return c.Render(http.StatusOK, r.HTML("tasks/index.plush.html"))
 }
@@ -75,6 +76,7 @@ func TasksCreate(c buffalo.Context) error {
 
 		c.Set("tasks", tasks)
 		c.Set("task", task)
+		c.Set("dueDateInput", input.DueDate)
 		c.Set("errors", verrs)
 		return c.Render(http.StatusUnprocessableEntity, r.HTML("tasks/index.plush.html"))
 	}
@@ -97,6 +99,7 @@ func TasksEdit(c buffalo.Context) error {
 	}
 
 	c.Set("task", task)
+	c.Set("dueDateInput", "")
 	c.Set("errors", validate.NewErrors())
 	return c.Render(http.StatusOK, r.HTML("tasks/edit.plush.html"))
 }
@@ -130,6 +133,7 @@ func TasksUpdate(c buffalo.Context) error {
 	}
 	if verrs.HasAny() {
 		c.Set("task", task)
+		c.Set("dueDateInput", input.DueDate)
 		c.Set("errors", verrs)
 		return c.Render(http.StatusUnprocessableEntity, r.HTML("tasks/edit.plush.html"))
 	}
