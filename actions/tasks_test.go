@@ -325,6 +325,21 @@ func (as *ActionSuite) Test_TasksUpdate_SetsAndClearsDueDate() {
 	as.True(task.Completed)
 }
 
+func (as *ActionSuite) Test_TasksUpdate_KeepsDueDateWhenOnlyTitleChanges() {
+	due := time.Date(2026, time.October, 22, 0, 0, 0, 0, time.UTC)
+	task := &models.Task{Title: "Título original", DueDate: &due}
+	verrs, err := as.DB.ValidateAndCreate(task)
+	as.NoError(err)
+	as.False(verrs.HasAny())
+
+	res := as.authed("/tasks/%s", task.ID).Put(url.Values{"title": {"Título nuevo"}, "due_date": {"2026-10-22"}})
+	as.Equal(303, res.Code)
+	as.NoError(as.DB.Reload(task))
+	as.Equal("Título nuevo", task.Title)
+	as.NotNil(task.DueDate)
+	as.Equal("2026-10-22", task.DueDate.Format("2006-01-02"))
+}
+
 func (as *ActionSuite) Test_TasksUpdate_InvalidDueDate() {
 	task := as.taskForEditing(false)
 	res := as.authed("/tasks/%s", task.ID).Put(url.Values{"title": {"Título nuevo"}, "due_date": {"no-es-fecha"}})
